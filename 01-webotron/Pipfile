@@ -8,6 +8,8 @@ ipython = "*"
 
 [packages]
 boto3 = "*"
+click = "*"
+re = "*"
 
 [requires]
 python_version = "3.7"
