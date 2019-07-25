@@ -110,7 +110,7 @@ class BucketManager:
         for page in paginator.paginate(Bucket=bucket.name):
             for obj in page.get('Contents', []):
                 self.manifest[obj['Key']] = obj['ETag']
-        ### print("Manifest=", self.manifest)
+        print("Manifest=", self.manifest)
 
     @staticmethod # Use when you don't need to know anything about our bucket or BucketManager
     def hash_data(data):
@@ -156,7 +156,7 @@ class BucketManager:
         #print('Found_keys=', self.found_keys)
         manifest_key = self.manifest.get(key, '')
         if manifest_key == etag:
-            ### print("Skipping {}, etags match".format(key))
+            print("Skipping {}, etags match".format(key))
             return
 
         return bucket.upload_file(

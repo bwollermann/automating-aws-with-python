@@ -17,7 +17,6 @@ class BucketManager:
     """Manage an S3 Bucket."""
 
     CHUNK_SIZE = 8388608
-    found_keys = []
 
     def __init__(self, session):
         """Create a BucketManager object."""
@@ -28,7 +27,6 @@ class BucketManager:
             multipart_threshold=self.CHUNK_SIZE
         )
         self.manifest = {}
-
 
     def get_region_name(self, bucket):
         """Get the bucket's region name."""
@@ -105,12 +103,11 @@ class BucketManager:
 
     def load_manifest(self, bucket):
         """Load manifest for caching purposes."""
-        # print("Loading manifest")
         paginator = self.s3.meta.client.get_paginator('list_objects_v2')
         for page in paginator.paginate(Bucket=bucket.name):
             for obj in page.get('Contents', []):
                 self.manifest[obj['Key']] = obj['ETag']
-        ### print("Manifest=", self.manifest)
+        # print("Manifest=", self.manifest)
 
     @staticmethod # Use when you don't need to know anything about our bucket or BucketManager
     def hash_data(data):
@@ -134,9 +131,37 @@ class BucketManager:
                 hashes.append(self.hash_data(data))
 
         if not hashes:
-            return '"{}"'.format(self.hash_data(data).hexdigest())
+            return
         elif len(hashes) == 1:
             return '"{}"'.format(hashes[0].hexdigest())
+
+        else:
+            digests = (h.digest() for h in hashes)
+            hash = self.hash_data(reduce(lambda x, y: x + y, digests))
+            # hash = self.hash_data(reduce(lambda x, y: x + y, (h.digest() for h in hashes)))
+            return '"{}-{}"'.format(hash.hexdigest(), len(hashes))
+
+
+
+    def gen_etag2(self, path):
+        """Generate etag for file."""
+        hashes = []
+
+        with open(path, 'rb') as file:
+            # while True:
+            chunk = file.read(self.CHUNK_SIZE)
+            hashes.append(self.hash_data(chunk))
+            print('PATH=', path, 'HASHES=', hashes, 'CHUNK=', chunk)
+            while chunk:
+                hashes.append(self.hash_data(chunk))
+                print('PATH=', path, 'HASHES=', hashes)
+                chunk = file.read(self.CHUNK_SIZE)
+
+        if not hashes:
+            return
+        elif len(hashes) == 1:
+            return '"{}"'.format(hashes[0].hexdigest())
+
         else:
             digests = (h.digest() for h in hashes)
             hash = self.hash_data(reduce(lambda x, y: x + y, digests))
@@ -151,12 +176,8 @@ class BucketManager:
 
         etag = self.gen_etag(path)
         # print("Key=", key, "ETag new object=", etag, " Etag manifest=", self.manifest.get(key, ''))
-
-        self.found_keys.append(key)
-        #print('Found_keys=', self.found_keys)
-        manifest_key = self.manifest.get(key, '')
-        if manifest_key == etag:
-            ### print("Skipping {}, etags match".format(key))
+        if self.manifest.get(key, '') == etag:
+            print("Skipping {}, etags match".format(key))
             return
 
         return bucket.upload_file(
@@ -166,7 +187,6 @@ class BucketManager:
                 'ContentType': content_type
             },
             Config=self.transfer_config)
-
 
     def sync(self, pathname, bucket_name):
         """Sync contents of path to bucket."""
@@ -191,11 +211,3 @@ class BucketManager:
                     self.upload_file(bucket, str(p), str(key))
 
         handle_directory(root)
-
-        def compare_manifest():
-           """Search each manifest file to see if it is in found keys."""
-           for manifest_key, manifest_hash in self.manifest.items():
-                if manifest_key not in self.found_keys:
-                    print(manifest_key, "no longer exists in the website")
-
-        compare_manifest()
