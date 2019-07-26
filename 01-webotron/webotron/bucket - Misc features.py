@@ -29,7 +29,6 @@ class BucketManager:
         )
         self.manifest = {}
 
-
     def get_region_name(self, bucket):
         """Get the bucket's region name."""
         bucket_location = self.s3.meta.client.get_bucket_location(
@@ -112,7 +111,8 @@ class BucketManager:
                 self.manifest[obj['Key']] = obj['ETag']
         print("Manifest=", self.manifest)
 
-    @staticmethod # Use when you don't need to know anything about our bucket or BucketManager
+    # Use when you don't need to know anything about bucket or BucketManager
+    @staticmethod
     def hash_data(data):
         """Generate md5 hash for data."""
         hash = md5()
@@ -140,20 +140,22 @@ class BucketManager:
         else:
             digests = (h.digest() for h in hashes)
             hash = self.hash_data(reduce(lambda x, y: x + y, digests))
-            # hash = self.hash_data(reduce(lambda x, y: x + y, (h.digest() for h in hashes)))
+            # hash = self.hash_data(reduce(
+            # lambda x,
+            # y: x + y,
+            # (h.digest() for h in hashes)))
             return '"{}-{}"'.format(hash.hexdigest(), len(hashes))
-
-
 
     def upload_file(self, bucket, path, key):
         """Upload path to s3_bucket at key."""
         content_type = mimetypes.guess_type(key)[0] or 'text/plain'
 
         etag = self.gen_etag(path)
-        # print("Key=", key, "ETag new object=", etag, " Etag manifest=", self.manifest.get(key, ''))
+        # print("Key=", key, "ETag new object=", etag
+        #       " Etag manifest=", self.manifest.get(key, ''))
 
         self.found_keys.append(key)
-        #print('Found_keys=', self.found_keys)
+        # print('Found_keys=', self.found_keys)
         manifest_key = self.manifest.get(key, '')
         if manifest_key == etag:
             print("Skipping {}, etags match".format(key))
@@ -166,7 +168,6 @@ class BucketManager:
                 'ContentType': content_type
             },
             Config=self.transfer_config)
-
 
     def sync(self, pathname, bucket_name):
         """Sync contents of path to bucket."""
@@ -193,8 +194,8 @@ class BucketManager:
         handle_directory(root)
 
         def compare_manifest():
-           """Search each manifest file to see if it is in found keys."""
-           for manifest_key, manifest_hash in self.manifest.items():
+            """Search each manifest file to see if it is in found keys."""
+            for manifest_key, manifest_hash in self.manifest.items():
                 if manifest_key not in self.found_keys:
                     print(manifest_key, "no longer exists in the website")
 
