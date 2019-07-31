@@ -18,7 +18,7 @@ class CertificateManager:
             CertificateArn=cert_arn)
         alt_names = cert_details['Certificate']['SubjectAlternativeNames']
         for name in alt_names:
-            print("Name: " + name)
+            # print("Name: " + name)
             if name == domain_name:
                 return True
             if name[0] == '*' and domain_name.endswith(name[1:]):
