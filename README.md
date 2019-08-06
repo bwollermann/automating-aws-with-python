@@ -26,4 +26,4 @@ using CloudWatch Events.
 
 ### Features
 
-Notifon currently has the following features: hello
+Notifon currently has the following features:
