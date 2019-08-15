@@ -1,0 +1,295 @@
+{
+  "service": {
+    "service": "notifon-notfier",
+    "serviceObject": {
+      "name": "notifon-notfier"
+    },
+    "provider": {
+      "stage": "dev",
+      "variableSyntax": "\\${([ ~:a-zA-Z0-9._@'\",\\-\\/\\(\\)*]+?)}",
+      "name": "aws",
+      "runtime": "python3.7",
+      "profile": "pythonAutomation",
+      "region": "us-east-2",
+      "environment": {
+        "SLACK_WEBHOOK_URL": "https://hooks.slack.com/services/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"
+      },
+      "versionFunctions": true,
+      "remoteFunctionData": null,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "PostDashtoDashslackLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/notifon-notfier-dev-post-to-slack"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "dev",
+                        "notifon-notfier",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/notifon-notfier-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/notifon-notfier-dev*:*:*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "notifon-notfier",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "PostDashtoDashslackLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/notifon-notfier/dev/1565904450461-2019-08-15T21:27:30.461Z/notifon-notfier.zip"
+              },
+              "FunctionName": "notifon-notfier-dev-post-to-slack",
+              "Handler": "handler.post_to_slack",
+              "MemorySize": 1024,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "python3.7",
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "SLACK_WEBHOOK_URL": "https://hooks.slack.com/services/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"
+                }
+              }
+            },
+            "DependsOn": [
+              "PostDashtoDashslackLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "PostDashtoDashslackLambdaVersionLJ3OYbhRzAHV7hHTkgDtw8P0ollfT5f1eeiTRr4": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "PostDashtoDashslackLambdaFunction"
+              },
+              "CodeSha256": "4SKIjDPIXp3pjIsJHBid4wjYnlpijJUdTF5RRzAlEMY="
+            }
+          },
+          "PostDashtoDashslackEventsRuleCloudWatchEvent1": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+              "EventPattern": {
+                "source": [
+                  "aws.autoscaling"
+                ],
+                "detail-type": [
+                  "EC2 Instance Launch Successful"
+                ],
+                "detail": {
+                  "AutoScalingGroupName": [
+                    "Notifon Example Group"
+                  ]
+                }
+              },
+              "State": "ENABLED",
+              "Targets": [
+                {
+                  "Arn": {
+                    "Fn::GetAtt": [
+                      "PostDashtoDashslackLambdaFunction",
+                      "Arn"
+                    ]
+                  },
+                  "Id": "post-to-slackCloudWatchEvent"
+                }
+              ]
+            }
+          },
+          "PostDashtoDashslackLambdaPermissionEventsRuleCloudWatchEvent1": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "PostDashtoDashslackLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "events.amazonaws.com",
+              "SourceArn": {
+                "Fn::GetAtt": [
+                  "PostDashtoDashslackEventsRuleCloudWatchEvent1",
+                  "Arn"
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          },
+          "PostDashtoDashslackLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "PostDashtoDashslackLambdaVersionLJ3OYbhRzAHV7hHTkgDtw8P0ollfT5f1eeiTRr4"
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "plugins": [
+      "serverless-python-requirements"
+    ],
+    "pluginsData": {},
+    "functions": {
+      "post-to-slack": {
+        "handler": "handler.post_to_slack",
+        "events": [
+          {
+            "cloudwatchEvent": {
+              "event": {
+                "source": [
+                  "aws.autoscaling"
+                ],
+                "detail-type": [
+                  "EC2 Instance Launch Successful"
+                ],
+                "detail": {
+                  "AutoScalingGroupName": [
+                    "Notifon Example Group"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "name": "notifon-notfier-dev-post-to-slack",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "python3.7",
+        "vpc": {}
+      }
+    },
+    "serviceFilename": "serverless.yml",
+    "layers": {},
+    "artifact": "C:\\Users\\BWollerm\\OneDrive - Nelnet, Inc\\code\\automating-aws-with-python\\02-notifon\\notifier\\.serverless\\notifon-notfier.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/notifon-notfier/dev/1565904450461-2019-08-15T21:27:30.461Z",
+    "artifact": "notifon-notfier.zip"
+  }
+}
