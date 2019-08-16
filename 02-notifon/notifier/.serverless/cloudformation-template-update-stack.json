@@ -105,7 +105,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/notifon-notfier/dev/1565904450461-2019-08-15T21:27:30.461Z/notifon-notfier.zip"
+          "S3Key": "serverless/notifon-notfier/dev/1565963335714-2019-08-16T13:48:55.714Z/notifon-notfier.zip"
         },
         "FunctionName": "notifon-notfier-dev-post-to-slack",
         "Handler": "handler.post_to_slack",
@@ -129,14 +129,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "PostDashtoDashslackLambdaVersionLJ3OYbhRzAHV7hHTkgDtw8P0ollfT5f1eeiTRr4": {
+    "PostDashtoDashslackLambdaVersionpJOMKrwfK0zad9ruMpGsW5MApxD5UCVgyaUVKDktDgs": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "PostDashtoDashslackLambdaFunction"
         },
-        "CodeSha256": "4SKIjDPIXp3pjIsJHBid4wjYnlpijJUdTF5RRzAlEMY="
+        "CodeSha256": "xeLOHiIQwJ/yBmncGe3FtchwMAsDSFp1Z+MZc45yYOg="
       }
     },
     "PostDashtoDashslackEventsRuleCloudWatchEvent1": {
@@ -198,7 +198,7 @@
     "PostDashtoDashslackLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "PostDashtoDashslackLambdaVersionLJ3OYbhRzAHV7hHTkgDtw8P0ollfT5f1eeiTRr4"
+        "Ref": "PostDashtoDashslackLambdaVersionpJOMKrwfK0zad9ruMpGsW5MApxD5UCVgyaUVKDktDgs"
       }
     }
   }
